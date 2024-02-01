@@ -1,9 +1,10 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class Position
 {
     private int x,y;
-    private int stepped;
+    private HashSet<ConcretePiece> stepped;
     public Position(int x, int y)
     {
         this.setX(x);
@@ -31,11 +32,28 @@ public class Position
         return "(" + this.getX() + ", " + this.getY() + ")";
     }
 
-    public int getStepped() {
-        return this.stepped;
+    public int getStepped()
+    {
+        return this.stepped.size();
     }
 
-    public void setStepped(int stepped) {
-        this.stepped = stepped;
+    public void initStepped() {
+        this.stepped = new HashSet<>();
+    }
+
+    public void addUniquePiece(ConcretePiece piece)
+    {
+        this.stepped.add(piece);
+//        System.out.println("(" + this.getX() + ", " + this.getY() + ") : " +stepped);
+//        if (this.stepped.isEmpty())
+//        {
+//            this.stepped.add(piece);
+//            return;
+//        }
+//        for (int i = 0; i < this.stepped.size(); i++) {
+//            if (this.stepped.get(i).getName().equals(piece.getName()))
+//                continue;
+//            this.stepped.add(piece);
+//        }
     }
 }

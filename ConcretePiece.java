@@ -49,4 +49,9 @@ public abstract class ConcretePiece implements Piece
     public void setDistance(int distance) {
         this.distance = distance;
     }
+
+    @Override
+    public String toString() {
+        return this.getName();
+    }
 }

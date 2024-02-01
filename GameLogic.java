@@ -32,7 +32,7 @@ public class GameLogic implements PlayableLogic
         piece.addMove(b);
         piece.setDistance(piece.getDistance() + Math.abs((b.getX() - a.getX()) + Math.abs(b.getY() - a.getY())));
 
-        positions[b.getX()][b.getY()].setStepped(positions[b.getX()][b.getY()].getStepped() + 1);
+        positions[b.getX()][b.getY()].addUniquePiece(board[b.getX()][b.getY()]);
 
         capture(b);
         checkmate();
@@ -46,8 +46,20 @@ public class GameLogic implements PlayableLogic
 
     private void printStats(boolean attackerTurn)
     {
-        this.attacker.getPieces().sort(Comparator.comparingInt(piece -> piece.getMoveHistory().size()));
-        this.defender.getPieces().sort(Comparator.comparingInt(piece -> piece.getMoveHistory().size()));
+        this.attacker.getPieces().sort((piece1, piece2) -> {
+            if (piece1.getMoveHistory().size() == piece2.getMoveHistory().size())
+            {
+                return Integer.compare(Integer.parseInt(piece1.getName().substring(1)),Integer.parseInt(piece2.getName().substring(1)));
+            }
+            return Integer.compare(piece1.getMoveHistory().size(), piece2.getMoveHistory().size());
+        });
+        this.defender.getPieces().sort((piece1, piece2) -> {
+            if (piece1.getMoveHistory().size() == piece2.getMoveHistory().size())
+            {
+                return Integer.compare(Integer.parseInt(piece1.getName().substring(1)),Integer.parseInt(piece2.getName().substring(1)));
+            }
+            return Integer.compare(piece1.getMoveHistory().size(), piece2.getMoveHistory().size());
+        });
         if (attackerTurn)
         {
             // print attacker first then print defender
@@ -89,6 +101,9 @@ public class GameLogic implements PlayableLogic
             if (((Pawn) piece1).getKills() == ((Pawn) piece2).getKills() &&
                     Integer.parseInt(piece1.getName().substring(1)) == Integer.parseInt(piece2.getName().substring(1)))
                 return piece1.getOwner().isPlayerOne() != attackerTurn ? -1 : 1;
+            if (((Pawn) piece1).getKills() == ((Pawn) piece2).getKills() &&
+                    Integer.parseInt(piece1.getName().substring(1)) != Integer.parseInt(piece2.getName().substring(1)))
+                return Integer.compare(Integer.parseInt(piece1.getName().substring(1)), Integer.parseInt(piece2.getName().substring(1)));
             return -Integer.compare(((Pawn) piece1).getKills(), ((Pawn) piece2).getKills());
         });
         for (ConcretePiece piece : this.pieces)
@@ -106,26 +121,28 @@ public class GameLogic implements PlayableLogic
             if (piece1.getDistance() == piece2.getDistance() &&
                     Integer.parseInt(piece1.getName().substring(1)) == Integer.parseInt(piece2.getName().substring(1)))
                 return piece1.getOwner().isPlayerOne() != attackerTurn ? -1 : 1;
+            if (piece1.getDistance() == piece2.getDistance() &&
+                    Integer.parseInt(piece1.getName().substring(1)) != Integer.parseInt(piece2.getName().substring(1)))
+                return Integer.compare(Integer.parseInt(piece1.getName().substring(1)), Integer.parseInt(piece2.getName().substring(1)));
             return -Integer.compare(piece1.getDistance(), piece2.getDistance());
         });
-        // TODO: FIXME!!!!
         for (ConcretePiece piece : this.pieces)
         {
             if (piece.getDistance() == 0)
                 continue;
-            System.out.println(piece.getName() + ": " + piece.getDistance() + " distance");
+            System.out.println(piece.getName() + ": " + piece.getDistance() + " squares");
         }
         System.out.println("*".repeat(75));
         // part 4
         ArrayList <Position> temp = new ArrayList<>();
         for (int i = 0; i < this.getBoardSize(); i++)
             temp.addAll(Arrays.asList(positions[i]).subList(0, this.getBoardSize()));
-        temp.sort(Comparator.comparingInt(Position::getStepped));
+        temp.sort((pos1, pos2) -> -Integer.compare(pos1.getStepped(), pos2.getStepped()));
         for (Position pos : temp)
         {
             if (pos.getStepped() <= 1)
                 continue;
-            System.out.println(pos + " " + pos.getStepped() + " pieces");
+            System.out.println(pos + "" + pos.getStepped() + " pieces");
         }
         System.out.println("*".repeat(75));
     }
@@ -133,8 +150,7 @@ public class GameLogic implements PlayableLogic
     private boolean isKingCaptured()
     {
         //find king
-        int kingX = -1;
-        int kingY = -1;
+        int kingX = -1, kingY = -1;
         for (int i = 0; i < getBoardSize(); i++)
             for (int j = 0; j < getBoardSize(); j++)
                 if (board[i][j] instanceof King)
@@ -143,21 +159,20 @@ public class GameLogic implements PlayableLogic
                     kingX = i;
                     break;
                 }
-
         if(kingX == 0)
-            if(board[kingX + 1][kingY] instanceof Pawn && !board[kingX + 1][kingY].getOwner().isPlayerOne() &&
-                    board[kingX][kingY + 1] instanceof Pawn && !board[kingX][kingY + 1].getOwner().isPlayerOne() &&
-                    board[kingX][kingY - 1] instanceof Pawn && !board[kingX][kingY - 1].getOwner().isPlayerOne())
+            if(board[1][kingY] instanceof Pawn && !board[1][kingY].getOwner().isPlayerOne() &&
+                    board[0][kingY + 1] instanceof Pawn && !board[0][kingY + 1].getOwner().isPlayerOne() &&
+                    board[0][kingY - 1] instanceof Pawn && !board[0][kingY - 1].getOwner().isPlayerOne())
                 return true;
-        else if(kingX == this.getBoardSize() - 1)
-            if(board[kingX - 1][kingY] instanceof Pawn && !board[kingX - 1][kingY].getOwner().isPlayerOne() &&
+        if(kingX == this.getBoardSize() - 1)
+            if(board[this.getBoardSize() - 2][kingY] instanceof Pawn && !board[this.getBoardSize() - 2][kingY].getOwner().isPlayerOne() &&
                     board[kingX][kingY + 1] instanceof Pawn && !board[kingX][kingY + 1].getOwner().isPlayerOne() &&
                     board[kingX][kingY - 1] instanceof Pawn && !board[kingX][kingY - 1].getOwner().isPlayerOne())
                 return true;
         if(kingY == 0)
-            if(board[kingX][kingY + 1] instanceof Pawn && !board[kingX][kingY + 1].getOwner().isPlayerOne() &&
-                    board[kingX + 1][kingY] instanceof Pawn && !board[kingX + 1][kingY].getOwner().isPlayerOne() &&
-                    board[kingX - 1][kingY] instanceof Pawn && !board[kingX - 1][kingY].getOwner().isPlayerOne())
+            if(board[kingX][1] instanceof Pawn && !board[kingX][1].getOwner().isPlayerOne() &&
+                    board[kingX + 1][0] instanceof Pawn && !board[kingX + 1][0].getOwner().isPlayerOne() &&
+                    board[kingX - 1][0] instanceof Pawn && !board[kingX - 1][0].getOwner().isPlayerOne())
                 return true;
         if(kingY == this.getBoardSize() - 1)
             if(board[kingX][kingY - 1] instanceof Pawn && !board[kingX][kingY - 1].getOwner().isPlayerOne() &&
@@ -175,7 +190,6 @@ public class GameLogic implements PlayableLogic
 
     private void capture(Position d)
     {
-        System.out.println("x: " + d.getX() + " y: " + d.getY());
         if (getPieceAtPosition(d) instanceof King)
             return;
         if (getPieceAtPosition(d).getOwner().isPlayerOne())
@@ -608,13 +622,13 @@ public class GameLogic implements PlayableLogic
         for (int i = 3; i < 8; i++)
         {
             this.board[i][0] = new Pawn(this.attacker);
-            this.board[i][0].setName("A" + (i - 2));
+//            this.board[i][0].setName("A" + (i - 2));
             this.board[0][i] = new Pawn(this.attacker);
-            this.board[0][i].setName("A" + (2 * i + 1));
+//            this.board[0][i].setName("A" + (2 * i + 1));
             this.board[i][10] = new Pawn(this.attacker);
-            this.board[i][10].setName("A" + (i + 1) * 2);
+//            this.board[i][10].setName("A" + (i + 1) * 2);
             this.board[10][i] = new Pawn(this.attacker);
-            this.board[10][i].setName("A" + (i + 17));
+//            this.board[10][i].setName("A" + (i + 17));
         }
 
         for (int i = 0; i <= 2; i++)
@@ -647,12 +661,39 @@ public class GameLogic implements PlayableLogic
         this.board[this.BOARD_SIZE / 2][this.BOARD_SIZE - 2] = new Pawn(this.attacker);
         this.board[this.BOARD_SIZE / 2][this.BOARD_SIZE - 2].setName("A19");
 
+        this.board[3][0].setName("A1");
+        this.board[4][0].setName("A2");
+        this.board[5][0].setName("A3");
+        this.board[6][0].setName("A4");
+        this.board[7][0].setName("A5");
+        this.board[5][1].setName("A6");
+        this.board[0][3].setName("A7");
+        this.board[10][3].setName("A8");
+        this.board[0][4].setName("A9");
+        this.board[10][4].setName("A10");
+        this.board[0][5].setName("A11");
+        this.board[1][5].setName("A12");
+        this.board[9][5].setName("A13");
+        this.board[10][5].setName("A14");
+        this.board[0][6].setName("A15");
+        this.board[10][6].setName("A16");
+        this.board[0][7].setName("A17");
+        this.board[10][7].setName("A18");
+        this.board[5][9].setName("A19");
+        this.board[3][10].setName("A20");
+        this.board[4][10].setName("A21");
+        this.board[5][10].setName("A22");
+        this.board[6][10].setName("A23");
+        this.board[7][10].setName("A24");
+
         for (int i = 0; i < this.getBoardSize(); i++)
             for (int j = 0; j < this.getBoardSize(); j++)
             {
                 this.positions[i][j] = new Position(i, j);
+                this.positions[i][j].initStepped();
                 if (this.board[i][j] != null)
                 {
+                    this.positions[i][j].addUniquePiece(this.board[i][j]);
                     this.board[i][j].addMove(this.positions[i][j]);
                     if (this.board[i][j].getOwner().isPlayerOne())
                         this.defender.addPiece(this.board[i][j]);
