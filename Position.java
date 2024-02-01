@@ -9,6 +9,7 @@ public class Position
     {
         this.setX(x);
         this.setY(y);
+        this.stepped = new HashSet<>();
     }
 
     public int getX() {
@@ -35,10 +36,6 @@ public class Position
     public int getStepped()
     {
         return this.stepped.size();
-    }
-
-    public void initStepped() {
-        this.stepped = new HashSet<>();
     }
 
     public void addUniquePiece(ConcretePiece piece)

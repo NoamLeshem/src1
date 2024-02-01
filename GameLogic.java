@@ -690,7 +690,6 @@ public class GameLogic implements PlayableLogic
             for (int j = 0; j < this.getBoardSize(); j++)
             {
                 this.positions[i][j] = new Position(i, j);
-                this.positions[i][j].initStepped();
                 if (this.board[i][j] != null)
                 {
                     this.positions[i][j].addUniquePiece(this.board[i][j]);

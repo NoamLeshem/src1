@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Objects;
 
 public abstract class ConcretePiece implements Piece
 {
@@ -53,5 +54,18 @@ public abstract class ConcretePiece implements Piece
     @Override
     public String toString() {
         return this.getName();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConcretePiece piece = (ConcretePiece) o;
+        return Objects.equals(owner, piece.owner) && Objects.equals(name, piece.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(owner, name);
     }
 }
